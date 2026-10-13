@@ -830,10 +830,12 @@ const styles = StyleSheet.create({
   fsExitFloating: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    left: 0,
+    right: 0,
     zIndex: 100,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
   },
   fsExitBtn: {

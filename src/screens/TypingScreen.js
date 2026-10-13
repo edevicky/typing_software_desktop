@@ -34,63 +34,6 @@ const PR_MODES = [
   { label: 'Sentences', value: 'sentences' },
   { label: 'Paragraph', value: 'paragraph' },
 ];
-const VIRTUAL_KEY_ROWS = [
-  ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
-  ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
-  ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'Enter'],
-  ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'Shift'],
-  ['Ctrl', 'Win', 'Alt', 'Space', 'Alt', 'Menu', 'Ctrl'],
-];
-const WIDE_KEY_FLEX = { Backspace: 2.1, Tab: 1.35, Caps: 1.65, Enter: 1.8, Shift: 2.15, Ctrl: 1.25, Win: 1.15, Alt: 1.15, Space: 5.2, Menu: 1.15 };
-
-const virtualKeyId = (event) => {
-  const key = event.key;
-  if (!key) return null;
-  if (key === ' ') return 'Space';
-  if (key === 'Escape') return 'Esc';
-  if (key === 'CapsLock') return 'Caps';
-  if (key === 'Control') return 'Ctrl';
-  if (key === 'Meta') return 'Win';
-  if (key === 'ContextMenu') return 'Menu';
-  if (key === 'AltGraph') return 'Alt';
-  return key.length === 1 ? key.toUpperCase() : key;
-};
-
-function VirtualKeyboard({ pressedKeys, nextKey }) {
-  return (
-    <View style={styles.keyboardCard}>
-      <View style={styles.keyboardHeader}>
-        <Text style={styles.keyboardTitle}>Keyboard</Text>
-        <View style={styles.nextKeyBadge}>
-          <Text style={styles.nextKeyLabel}>NEXT KEY</Text>
-          <Text style={styles.nextKeyValue}>{nextKey || '—'}</Text>
-        </View>
-      </View>
-      {VIRTUAL_KEY_ROWS.map((row, rowIndex) => (
-        <View key={rowIndex} style={styles.keyboardRow}>
-          {row.map((key, keyIndex) => {
-            const pressed = pressedKeys.includes(key);
-            const expected = nextKey === key;
-            return (
-              <View
-                key={`${key}-${keyIndex}`}
-                style={[
-                  styles.virtualKey,
-                  { flex: WIDE_KEY_FLEX[key] || 1 },
-                  expected && styles.virtualKeyExpected,
-                  pressed && (expected ? styles.virtualKeyCorrect : styles.virtualKeyPressed),
-                ]}
-              >
-                {key !== 'Space' && <Text style={[styles.virtualKeyText, pressed && styles.virtualKeyTextPressed]}>{key}</Text>}
-              </View>
-            );
-          })}
-        </View>
-      ))}
-    </View>
-  );
-}
-
 function OptionPills({ options, value, onChange, color = COLORS.blue, small }) {
   return (
     <View style={styles.pillGroup}>
@@ -208,7 +151,7 @@ export default function TypingScreen({
   const [countdown, setCountdown] = useState(config.timeSec || 60);
   const [useTimed, setUseTimed] = useState((config.timeSec || 0) > 0);
   const [result, setResult] = useState(null);
-  const [pressedKeys, setPressedKeys] = useState([]);
+
   const [textWidth, setTextWidth] = useState(0);
   const [charW, setCharW] = useState(null);
 
@@ -314,24 +257,13 @@ export default function TypingScreen({
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const onKeyDown = (e) => {
-      const keyId = virtualKeyId(e);
-      if (keyId) setPressedKeys((current) => current.includes(keyId) ? current : [...current, keyId]);
       if (e.key === 'Escape' && onBackRef.current) {
         onBackRef.current();
       }
     };
-    const onKeyUp = (e) => {
-      const keyId = virtualKeyId(e);
-      if (keyId) setPressedKeys((current) => current.filter((key) => key !== keyId));
-    };
-    const clearPressedKeys = () => setPressedKeys([]);
     document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
-    window.addEventListener('blur', clearPressedKeys);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('blur', clearPressedKeys);
     };
   }, []);
 
@@ -542,8 +474,6 @@ export default function TypingScreen({
   const liveErrors = Math.max(0, userInput.length - liveCorrectChars);
   const liveAccuracy = userInput.length ? Math.round((liveCorrectChars / userInput.length) * 100) : 100;
   const progress = currentText.length > 0 ? Math.min(1, userInput.length / currentText.length) : 0;
-  const nextChar = currentText[progressCursor] || '';
-  const nextKey = nextChar === ' ' ? 'Space' : nextChar === '\n' ? 'Enter' : nextChar.length === 1 ? nextChar.toUpperCase() : nextChar;
   const timerColor = isStarted && useTimed && countdown <= 10
     ? '#e11d48'
     : isStarted && useTimed && countdown <= 20
@@ -583,10 +513,6 @@ export default function TypingScreen({
         </View>
       </View>
     </View>
-  );
-
-  const renderVirtualKeyboard = () => (
-    <VirtualKeyboard pressedKeys={pressedKeys} nextKey={nextKey} />
   );
 
   const handlePause = () => {
@@ -1073,7 +999,6 @@ const renderTextArea = () => {
             {renderControls()}
             {renderStatsBar()}
             {renderTextArea()}
-            {renderVirtualKeyboard()}
             {renderResult()}
 
             {/* Hidden input */}
@@ -1355,97 +1280,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0e9488',
     borderRadius: 6,
     transition: 'width 180ms ease',
-  },
-  keyboardCard: {
-    width: '100%',
-    maxWidth: 1100,
-    alignSelf: 'center',
-    marginTop: 2,
-    marginBottom: 12,
-    padding: 10,
-    backgroundColor: '#eaf2f5',
-    borderWidth: 1,
-    borderColor: '#cbdde3',
-    borderRadius: 14,
-  },
-  keyboardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  keyboardTitle: {
-    color: '#415d68',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    fontSize: 11,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  nextKeyBadge: {
-    minWidth: 90,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#d4e2e6',
-    borderRadius: 8,
-  },
-  nextKeyLabel: {
-    color: '#71858e',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    fontSize: 8,
-    letterSpacing: 0.4,
-  },
-  nextKeyValue: {
-    color: '#0e9488',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  keyboardRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 4,
-    marginBottom: 4,
-  },
-  virtualKey: {
-    minWidth: 0,
-    minHeight: 29,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderBottomWidth: 2,
-    borderColor: '#cfdee3',
-    borderRadius: 6,
-    transition: 'background-color 100ms ease, border-color 100ms ease, transform 100ms ease',
-  },
-  virtualKeyText: {
-    color: '#354e59',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    fontSize: 9,
-  },
-  virtualKeyExpected: {
-    borderColor: '#0e9488',
-    backgroundColor: '#e4f6f3',
-  },
-  virtualKeyPressed: {
-    backgroundColor: '#c8e9e4',
-    borderColor: '#0e9488',
-    transform: [{ translateY: 1 }],
-  },
-  virtualKeyCorrect: {
-    backgroundColor: '#bbf7d0',
-    borderColor: '#16a34a',
-    transform: [{ translateY: 1 }],
   },
   progressTrack: {
     height: 6,

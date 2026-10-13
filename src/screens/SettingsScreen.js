@@ -22,11 +22,6 @@ const DURATIONS = [
   { label: '10 min', value: 600 },
 ];
 
-const HINDI_LAYOUTS = [
-  { label: 'Mangal', value: 'mangal' },
-  { label: 'Kruti Dev', value: 'krutidev' },
-];
-
 const FONT_SIZES = [18, 20, 22, 24, 26];
 
 function Toggle({ value, onChange }) {
@@ -225,38 +220,6 @@ export default function SettingsScreen({
           </View>
         </View>
 
-        {/* Hindi Typing */}
-        <Text style={styles.sectionTitle}>Hindi Typing</Text>
-        <View style={styles.card}>
-          <View style={styles.rowBetween}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.dataTitle}>Typing layout</Text>
-              <Text style={styles.dataSub}>Keyboard layout used for Hindi lessons</Text>
-            </View>
-            <Ionicons name="keypad-outline" size={18} color={COLORS.teal} />
-          </View>
-          <View style={styles.segment}>
-            {HINDI_LAYOUTS.map((d) => {
-              const sel = hindiLayout === d.value;
-              return (
-                <TouchableOpacity
-                  key={d.value}
-                  style={[styles.segmentItem, sel && { backgroundColor: COLORS.teal + '22', borderColor: COLORS.teal }]}
-                  onPress={() => onChangeHindiLayout && onChangeHindiLayout(d.value)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.segmentText, sel && { color: COLORS.teal }]}>{d.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text style={styles.layoutHint}>
-            {hindiLayout === 'krutidev'
-              ? 'Type using the Kruti Dev (Remington) layout - the app converts it to Unicode Devanagari (Mangal) automatically.'
-              : 'Type using a normal Unicode Devanagari keyboard (Mangal), like the standard Hindi keyboard.'}
-          </Text>
-        </View>
-
         {/* Data & Storage */}
         <Text style={styles.sectionTitle}>Data & Storage</Text>
         <View style={styles.card}>
@@ -385,7 +348,6 @@ const styles = StyleSheet.create({
   dataInfo: { flex: 1 },
   dataTitle: { color: COLORS.textWhite, fontSize: 14, fontFamily: 'Poppins_700Bold', fontWeight: '700' },
   dataSub: { color: COLORS.textMuted, fontSize: 11, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', marginTop: 2 },
-  layoutHint: { color: COLORS.textMuted, fontSize: 11, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', marginTop: 10, lineHeight: 16 },
 
   confirmRow: { flexDirection: 'row', gap: 8, marginTop: 10, marginLeft: 46 },
   confirmBtn: {
